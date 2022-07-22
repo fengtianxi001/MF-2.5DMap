@@ -44,12 +44,10 @@ class MyMap {
     this.scale = 1;
   }
   initial(): void {
-    const { mythree } = this;
-    mythree.scene.remove(this.meshGroup);
-    mythree.scene.remove(this.lineGroup);
+    this.memClear();
     this.meshGroup = new THREE.Group();
     this.lineGroup = new THREE.Group();
-    mythree.scene.add(this.meshGroup).add(this.lineGroup);
+    this.mythree.scene.add(this.meshGroup).add(this.lineGroup);
     this.mythree.removeAllLabel();
   }
   initProj(geojson: any): d3.GeoProjection {
@@ -241,6 +239,15 @@ class MyMap {
         this.loadData(`https://geojson.cn/data/${filename}.json`);
       }
     }
+  }
+  memClear() {
+    const { mythree } = this;
+    this.INTERSECTED = null;
+    mythree.deleteGroup(this.meshGroup)
+    mythree.deleteGroup(this.lineGroup)
+    mythree.scene.remove(this.meshGroup);
+    mythree.scene.remove(this.lineGroup);
+    this.mythree.renderMixins.pop();
   }
 }
 export default MyMap;

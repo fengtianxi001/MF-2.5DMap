@@ -137,5 +137,14 @@ class Three {
     this.labelGroup = new THREE.Group();
     this.scene.add(this.labelGroup);
   }
+  deleteGroup(group: THREE.Group) {
+    if (!group) return;
+    group.traverse(function (item) {
+      if (item instanceof THREE.Mesh) {
+        item.geometry.dispose(); 
+        item.material.dispose();
+      }
+    });
+  }
 }
 export default Three;

@@ -16,6 +16,7 @@ class Three {
   composers: any[];
   renderMixins: any[];
   clock: THREE.Clock;
+  labelGroup: THREE.Group;
   constructor(element: HTMLElement) {
     this.element = element;
     this.scene = this.initScene();
@@ -30,6 +31,8 @@ class Three {
     this.clock = new THREE.Clock();
     this.render();
     this.initLight();
+    this.labelGroup = new THREE.Group();
+    this.scene.add(this.labelGroup);
   }
   initScene() {
     const scene = new THREE.Scene();
@@ -53,12 +56,12 @@ class Three {
     const near = 0.1;
     const far = 2000;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.set(0, -30, 100);
+    camera.position.set(0, 0, 100);
     return camera;
   }
   initRenderer(element: HTMLElement) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    // renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.localClippingEnabled = true;
@@ -122,8 +125,20 @@ class Three {
   addLabel(element: HTMLElement, [x, y, z]: [number, number, number]) {
     const label = new CSS2DObject(element);
     label.position.set(x, y, z);
-    this.scene.add(label);
+    this.labelGroup.add(label);
     return label;
+  }
+  removeAllLabel() {
+    // console.log('removeAllLabel ', this.labelGroup);
+    try {
+      this.labelGroup?.traverse((child) => {
+        if(child.type==="Object3D"){
+          child.removeFromParent();
+        }
+      });
+    } catch (error) {
+      
+    }
   }
 }
 export default Three;

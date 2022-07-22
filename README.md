@@ -35,7 +35,7 @@ npm run dev
 [https://fengtianxi001.github.io/MF-2.5DMAP/](https://fengtianxi001.github.io/MF-2.5DMAP/)
 
 
-### 效果图(版本可能落后)
+## 效果图
 
 ![效果图](https://raw.githubusercontent.com/fengtianxi001/MF-2.5DMAP/master/screenshot/screenshot_01.gif)
 

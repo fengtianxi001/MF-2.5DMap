@@ -129,16 +129,13 @@ class Three {
     return label;
   }
   removeAllLabel() {
-    // console.log('removeAllLabel ', this.labelGroup);
-    try {
-      this.labelGroup?.traverse((child) => {
-        if(child.type==="Object3D"){
-          child.removeFromParent();
-        }
-      });
-    } catch (error) {
-      
-    }
+    this.labelGroup.children.forEach((child) => {
+      this.labelGroup.remove(child);
+    });
+    this.CSSRender.domElement.innerHTML = '';
+    this.scene.remove(this.labelGroup);
+    this.labelGroup = new THREE.Group();
+    this.scene.add(this.labelGroup);
   }
 }
 export default Three;

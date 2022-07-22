@@ -7,7 +7,7 @@ export type FeatureDataType = {
   code: string;
   centroid: [number, number];
   name: string;
-  coordinates: Array<CoordinatesType>;
+  coordinates: Array<Array<CoordinatesType>>;
   childrenNum: number;
   filename: string;
 };

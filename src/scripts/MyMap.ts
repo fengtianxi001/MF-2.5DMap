@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import axios from 'axios';
 import MyThree from './MyThree';
 import turfCenter from '@turf/center';
-import { forEach, size, flattenDepth, flattenDeep } from 'lodash-es';
+import { forEach, size, last } from 'lodash-es';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { GeojsonType, CoordinatesType, FeatureDataType, MeshType } from '../types/index';
 import { EXTRUDE_GEOMETRY_OPTIONS } from '../config/index';
@@ -20,6 +20,11 @@ class MyMap {
   lineGroup: THREE.Group;
   proj: d3.GeoProjection | null;
   raycaster: THREE.Raycaster;
+  pointer: THREE.Vector2;
+  INTERSECTED: any;
+  tracker: Array<string | number>;
+  onHover: (e: MouseEvent) => void;
+  onClick: (e: MouseEvent) => void;
   constructor(element: HTMLElement) {
     this.proj = null;
     this.element = element;
@@ -27,18 +32,20 @@ class MyMap {
     this.meshGroup = new THREE.Group();
     this.lineGroup = new THREE.Group();
     this.raycaster = new THREE.Raycaster();
-    // this.initial();
+    this.pointer = new THREE.Vector2();
+    this.INTERSECTED = null;
+    this.onHover = this._onHover.bind(this);
+    this.onClick = this._onClick.bind(this);
+    this.tracker = [];
   }
   initial(): void {
-    const { mythree, meshGroup, lineGroup } = this;
+    const { mythree } = this;
     mythree.scene.remove(this.meshGroup);
     mythree.scene.remove(this.lineGroup);
     this.meshGroup = new THREE.Group();
     this.lineGroup = new THREE.Group();
     mythree.scene.add(this.meshGroup).add(this.lineGroup);
     this.mythree.removeAllLabel();
-    const list = document.querySelectorAll('.label');
-    mythree.CSSRender.domElement.innerHTML = '';
   }
   initProj(geojson: any): d3.GeoProjection {
     //地图投影,根据geojson数据计算出地图投影
@@ -49,9 +56,13 @@ class MyMap {
     //开始加载数据并开始渲染
     this.initial();
     const { data: geojson } = await axios.get(url);
+    const { filename } = geojson.propertity;
+    if (filename && last(this.tracker) !== filename) {
+      //用于记录用户操作路径(下钻和返回上一级)
+      this.tracker.push(geojson.propertity.filename);
+    }
     this.proj = this.initProj(geojson);
     const features = this.parseData(geojson);
-    console.log('features', features);
     //开始构建
     forEach(features, (feature) => {
       this.createMesh(feature);
@@ -95,13 +106,6 @@ class MyMap {
           return shape.lineTo(x, -y);
         });
         const geometry = new THREE.ExtrudeGeometry(shape, EXTRUDE_GEOMETRY_OPTIONS);
-        // const mergeGeometries = mergeBufferGeometries([geometry], true);
-        // const material = new THREE.MeshPhongMaterial({
-        //   color: '#2a3556',
-        // });
-        // const mesh = new THREE.Mesh(mergeGeometries, material);
-        // mesh.translateZ(-0.5);
-        // mesh.position.set(0, 0, -0.1);
         geometryList.push(geometry);
       });
     });
@@ -176,42 +180,52 @@ class MyMap {
     this.mythree.composers.push(composer);
   }
   eventBind() {
-    const pointer = new THREE.Vector2();
-    let INTERSECTED: any;
+    //悬浮行政区高亮
     this.mythree.renderMixins.push(() => {
+      const { pointer } = this;
       this.raycaster.setFromCamera(pointer, this.mythree.camera);
       const intersects = this.raycaster.intersectObjects(this.meshGroup.children, false);
+      //   console.log('intersects',intersects)
       if (intersects.length > 0) {
-        if (INTERSECTED != intersects[0].object) {
-          if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-          INTERSECTED = intersects[0].object;
-          INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-          INTERSECTED.material.emissive?.setHex(0xff0000);
+        if (this.INTERSECTED != intersects[0].object) {
+          if (this.INTERSECTED) this.INTERSECTED.material.emissive.setHex(this.INTERSECTED.currentHex);
+          this.INTERSECTED = intersects[0].object;
+          this.INTERSECTED.currentHex = this.INTERSECTED.material.emissive.getHex();
+          //   console.log(this.INTERSECTED.currentHex);
+          this.INTERSECTED.material.emissive?.setHex(0xff0000);
         }
       } else {
-        if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-        INTERSECTED = null;
+        if (this.INTERSECTED) this.INTERSECTED.material.emissive.setHex(this.INTERSECTED.currentHex);
+        this.INTERSECTED = null;
       }
     });
-    document.addEventListener('mousemove', (e) => {
-      const { clientHeight, clientWidth } = this.element;
-      pointer.x = (e.clientX / clientWidth) * 2 - 1;
-      pointer.y = -(e.clientY / clientHeight) * 2 + 1;
-    });
-    document.addEventListener('click', (e) => {
-      const { clientHeight, clientWidth } = this.element;
-      pointer.x = (e.clientX / clientWidth) * 2 - 1;
-      pointer.y = -(e.clientY / clientHeight) * 2 + 1;
-      this.raycaster.setFromCamera(pointer, this.mythree.camera);
-      const intersects = this.raycaster.intersectObjects(this.meshGroup.children, false);
-      if (intersects.length <= 0) return void 0;
-      //   const code = intersects[0].object.userData.code;
+    document.addEventListener('mousemove', this.onHover);
+    document.addEventListener('click', this.onClick);
+  }
+  _onHover(e: MouseEvent) {
+    const { clientHeight, clientWidth } = this.element;
+    this.pointer.x = (e.clientX / clientWidth) * 2 - 1;
+    this.pointer.y = -(e.clientY / clientHeight) * 2 + 1;
+  }
+  _onClick(e: MouseEvent) {
+    const { clientHeight, clientWidth } = this.element;
+    this.pointer.x = (e.clientX / clientWidth) * 2 - 1;
+    this.pointer.y = -(e.clientY / clientHeight) * 2 + 1;
+    this.raycaster.setFromCamera(this.pointer, this.mythree.camera);
+    const intersects = this.raycaster.intersectObjects(this.meshGroup.children, false);
+    //如果用户点击到模型并且模型有子集的话=>下钻
+    //如果用户没点击到模型并且不在第一级别的话,返回更高级别的行政区
+    if (intersects.length > 0) {
       const { childrenNum, filename } = intersects[0].object.userData;
-      console.log(childrenNum);
-      if (childrenNum > 0) {
+      childrenNum > 0 && this.loadData(`https://geojson.cn/data/${filename}.json`);
+    } else {
+      if (size(this.tracker) > 1) {
+        this.tracker.pop();
+        console.log('after', this.tracker);
+        const filename = last(this.tracker);
         this.loadData(`https://geojson.cn/data/${filename}.json`);
       }
-    });
+    }
   }
 }
 export default MyMap;

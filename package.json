@@ -18,6 +18,7 @@
     "vite": "^3.0.0"
   },
   "dependencies": {
+    "@turf/area": "^6.5.0",
     "@turf/center": "^6.5.0",
     "@tweenjs/tween.js": "^18.6.4",
     "@types/lodash-es": "^4.17.6",

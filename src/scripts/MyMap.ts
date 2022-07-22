@@ -3,14 +3,15 @@ import * as d3 from 'd3';
 import axios from 'axios';
 import MyThree from './MyThree';
 import turfCenter from '@turf/center';
-import { forEach, size, last } from 'lodash-es';
+import turfArea from '@turf/area';
+import { forEach, size, last, reduce } from 'lodash-es';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { GeojsonType, CoordinatesType, FeatureDataType, MeshType } from '../types/index';
 import { EXTRUDE_GEOMETRY_OPTIONS } from '../config/index';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import com from '../components/AreaLabel.vue';
+import LabelVueComponent from '../components/AreaLabel.vue';
 import { createApp } from 'vue';
 
 class MyMap {
@@ -25,6 +26,8 @@ class MyMap {
   tracker: Array<string | number>;
   onHover: (e: MouseEvent) => void;
   onClick: (e: MouseEvent) => void;
+  plottingScale: number;
+  scale: number;
   constructor(element: HTMLElement) {
     this.proj = null;
     this.element = element;
@@ -37,6 +40,8 @@ class MyMap {
     this.onHover = this._onHover.bind(this);
     this.onClick = this._onClick.bind(this);
     this.tracker = [];
+    this.plottingScale = 9542502774372.604;
+    this.scale = 1;
   }
   initial(): void {
     const { mythree } = this;
@@ -50,17 +55,25 @@ class MyMap {
   initProj(geojson: any): d3.GeoProjection {
     //地图投影,根据geojson数据计算出地图投影
     const center = turfCenter(geojson).geometry.coordinates as CoordinatesType;
-    return d3.geoMercator().scale(30).center(center).translate([0, 0]);
+    // const proj = d3.geoMercator().scale(30).center(center).translate([0, 0]);
+    return d3
+      .geoMercator()
+      .scale(30 * this.scale)
+      .center(center)
+      .translate([0, 0]);
   }
   async loadData(url: string) {
     //开始加载数据并开始渲染
     this.initial();
     const { data: geojson } = await axios.get(url);
     const { filename } = geojson.propertity;
+    //记录用户操作路径(下钻和返回上一级)
     if (filename && last(this.tracker) !== filename) {
-      //用于记录用户操作路径(下钻和返回上一级)
       this.tracker.push(geojson.propertity.filename);
     }
+    //计算区域面积用于控制不同层级的缩放比例
+    let area = reduce(geojson.features, (prev, feature) => (prev += turfArea(feature)), 0);
+    this.scale = Math.sqrt(this.plottingScale / area);
     this.proj = this.initProj(geojson);
     const features = this.parseData(geojson);
     //开始构建
@@ -116,6 +129,7 @@ class MyMap {
     const mesh = new THREE.Mesh(geometries, material);
     mesh.translateZ(-0.5);
     mesh.position.set(0, 0, -0.1);
+    // mesh.scale.set(this.scale, this.scale, this.scale);
     mesh.userData = {
       code: feature.code,
       name: feature.name,
@@ -139,6 +153,7 @@ class MyMap {
         });
         geometry.setFromPoints(pointsArray);
         const line = new THREE.Line(geometry, material);
+        // line.scale.set(this.scale, this.scale, this.scale);
         this.lineGroup.add(line);
       });
     });
@@ -149,7 +164,7 @@ class MyMap {
     const [x, y] = this.proj(feature.centroid);
     const container = document.createElement('div');
     container.className = `${feature.name} label`;
-    createApp(com, {
+    createApp(LabelVueComponent, {
       code: feature.code,
       name: feature.name,
     }).mount(container);

@@ -3,10 +3,20 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
-//@ts-ignore
 import TWEEN from '@tweenjs/tween.js';
 class Three {
-  constructor(element) {
+  element: HTMLElement;
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  renderer: THREE.WebGLRenderer;
+  CSSRender: CSS2DRenderer;
+  control: OrbitControls;
+  stats: any;
+  mixers: any[];
+  composers: any[];
+  renderMixins: any[];
+  clock: THREE.Clock;
+  constructor(element: HTMLElement) {
     this.element = element;
     this.scene = this.initScene();
     this.camera = this.initCamera(element);
@@ -23,11 +33,9 @@ class Three {
   }
   initScene() {
     const scene = new THREE.Scene();
-    // scene.background = new THREE.Color(0xffffff);
-    // scene.fog = new THREE.Fog(0xffffff, 0.0001, 0.0001);
     return scene;
   }
-  initCSSRender(element) {
+  initCSSRender(element: HTMLElement) {
     const CSSRender = new CSS2DRenderer();
     CSSRender.setSize(element.offsetWidth, element.offsetHeight);
     CSSRender.domElement.style.position = 'absolute';
@@ -39,21 +47,16 @@ class Three {
     const light = new THREE.AmbientLight(0xffffff);
     this.scene.add(light);
   }
-  initCamera(element) {
-    // const fov = 20;
+  initCamera(element: HTMLElement) {
+    const fov = 20;
     const aspect = element.offsetWidth / element.offsetHeight;
-    // const near = 2;
-    // const far = 1000;
-    const fov = 20
-    // const aspect = element.value.offsetWidth / element.value.offsetHeight
-    const near = 0.1
-    const far = 2000
-
+    const near = 0.1;
+    const far = 2000;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     camera.position.set(0, -30, 100);
     return camera;
   }
-  initRenderer(element) {
+  initRenderer(element: HTMLElement) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -62,7 +65,6 @@ class Three {
     renderer.shadowMap.enabled = true;
     renderer.setSize(element.offsetWidth, element.offsetHeight);
     element.appendChild(renderer.domElement);
-    // renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
     return renderer;
   }
   initControl() {
@@ -73,7 +75,7 @@ class Three {
     control.update();
     return control;
   }
-  initHelp(size) {
+  initHelp(size: number = 500) {
     const axesHelper = new THREE.AxesHelper(size);
     this.scene.add(axesHelper);
   }
@@ -82,17 +84,21 @@ class Three {
     this.stats = new Stats();
     this.element.appendChild(this.stats.dom);
   }
-  loadGLTF(url, onProgress = () => {}) {
+  loadGLTF(url: string, onProgress = (process: number) => void 0) {
     const loader = new GLTFLoader();
     return new Promise((resolve) => {
       loader.load(
         url,
         (object) => resolve(object),
-        (xhr) => onProgress(xhr.loaded / 104778660)
+        (xhr) => onProgress(xhr.loaded / xhr.total)
       );
     });
   }
-  playModelAnimate(mesh, animations, animationName) {
+  playModelAnimate(
+    mesh: THREE.Object3D<THREE.Event> | THREE.AnimationObjectGroup,
+    animations: THREE.AnimationClip[],
+    animationName: string
+  ) {
     const mixer = new THREE.AnimationMixer(mesh);
     const clip = THREE.AnimationClip.findByName(animations, animationName);
     if (!clip) return void 0;
@@ -113,12 +119,11 @@ class Three {
     this.CSSRender.render(this.scene, this.camera);
     requestAnimationFrame(() => this.render());
   }
-  addLabel(element, [x, y, z]) {
+  addLabel(element: HTMLElement, [x, y, z]: [number, number, number]) {
     const label = new CSS2DObject(element);
     label.position.set(x, y, z);
     this.scene.add(label);
     return label;
-    // earthLabel.layers.set(0);
   }
 }
 export default Three;

@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import axios from 'axios';
 import MyThree from './MyThree';
 import turfCenter from '@turf/center';
-import { forEach, size } from 'lodash-es';
+import { forEach, size, flattenDepth, flattenDeep } from 'lodash-es';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { GeojsonType, CoordinatesType, FeatureDataType, MeshType } from '../types/index';
 import { EXTRUDE_GEOMETRY_OPTIONS } from '../config/index';
@@ -36,7 +36,7 @@ class MyMap {
     this.meshGroup = new THREE.Group();
     this.lineGroup = new THREE.Group();
     mythree.scene.add(this.meshGroup).add(this.lineGroup);
-    this.mythree.removeAllLabel()
+    this.mythree.removeAllLabel();
     const list = document.querySelectorAll('.label');
     mythree.CSSRender.domElement.innerHTML = '';
   }
@@ -51,7 +51,7 @@ class MyMap {
     const { data: geojson } = await axios.get(url);
     this.proj = this.initProj(geojson);
     const features = this.parseData(geojson);
-    console.log('features',features)
+    console.log('features', features);
     //开始构建
     forEach(features, (feature) => {
       this.createMesh(feature);
@@ -65,57 +65,51 @@ class MyMap {
     //解析json数据返回当前范围下的行政区划数据(邮编、名称、中心点、坐标)
     const features = geojson.features;
     const list: FeatureDataType[] = [];
-    features.map((feature) => {
+    features.map((feature, index) => {
       const code = feature.properties?.code;
       const centroid = feature.properties?.centroid ?? feature.properties?.center;
       const name = feature.properties?.name;
-      const type = feature.geometry.type;
-      const coordinates = feature.geometry.coordinates;
+      const coordinates = feature.geometry.coordinates as FeatureDataType['coordinates'];
       const childrenNum = feature.properties?.childrenNum;
       const filename = feature.properties?.filename;
-      if (type === 'MultiPolygon') {
-        coordinates.forEach((coordinate) => {
-          coordinate.forEach((rows) => {
-            list.push({
-              code,
-              centroid,
-              name,
-              coordinates: rows as CoordinatesType[],
-              childrenNum,
-              filename,
-            });
-          });
-        });
-      } else if (type === 'Polygon') {
-        coordinates.forEach((coordinate) => {
-          list.push({
-            code,
-            centroid,
-            name,
-            coordinates: coordinate as CoordinatesType[],
-            childrenNum,
-            filename,
-          });
-        });
-      }
+      list.push({
+        code,
+        centroid,
+        name,
+        coordinates,
+        childrenNum,
+        filename,
+      });
     });
     return list;
   }
   createMesh(feature: FeatureDataType) {
-    const shape = new THREE.Shape();
-    //根据坐标点构建出shape
-    forEach(feature.coordinates, (point: CoordinatesType, index: number) => {
-      //@ts-ignore
-      const [x, y] = this.proj(point);
-      if (index === 0) return shape.moveTo(x, -y);
-      return shape.lineTo(x, -y);
+    const geometryList: Array<THREE.ExtrudeGeometry> = [];
+    forEach(feature.coordinates, (part) => {
+      forEach(part, (item) => {
+        const shape = new THREE.Shape();
+        forEach(item, (point, index: number) => {
+          //@ts-ignore
+          const [x, y] = this.proj(point);
+          if (index === 0) return shape.moveTo(x, -y);
+          return shape.lineTo(x, -y);
+        });
+        const geometry = new THREE.ExtrudeGeometry(shape, EXTRUDE_GEOMETRY_OPTIONS);
+        // const mergeGeometries = mergeBufferGeometries([geometry], true);
+        // const material = new THREE.MeshPhongMaterial({
+        //   color: '#2a3556',
+        // });
+        // const mesh = new THREE.Mesh(mergeGeometries, material);
+        // mesh.translateZ(-0.5);
+        // mesh.position.set(0, 0, -0.1);
+        geometryList.push(geometry);
+      });
     });
-    const geometry = new THREE.ExtrudeGeometry(shape, EXTRUDE_GEOMETRY_OPTIONS);
-    const mergeGeometries = mergeBufferGeometries([geometry], true);
     const material = new THREE.MeshPhongMaterial({
       color: '#2a3556',
     });
-    const mesh = new THREE.Mesh(mergeGeometries, material);
+    const geometries = mergeBufferGeometries(geometryList, true);
+    const mesh = new THREE.Mesh(geometries, material);
     mesh.translateZ(-0.5);
     mesh.position.set(0, 0, -0.1);
     mesh.userData = {
@@ -127,19 +121,23 @@ class MyMap {
     this.meshGroup.add(mesh);
   }
   createLine(feature: FeatureDataType) {
-    const geometry = new THREE.BufferGeometry();
-    const pointsArray = new Array();
-    forEach(feature.coordinates, (point: CoordinatesType) => {
-      //@ts-ignore
-      const [x, y] = this.proj(point);
-      pointsArray.push(new THREE.Vector3(x, -y, 1.2));
+    forEach(feature.coordinates, (part) => {
+      forEach(part, (item) => {
+        const geometry = new THREE.BufferGeometry();
+        const pointsArray = new Array();
+        forEach(item, (point) => {
+          //@ts-ignore
+          const [x, y] = this.proj(point);
+          pointsArray.push(new THREE.Vector3(x, -y, 1.2));
+        });
+        const material = new THREE.MeshBasicMaterial({
+          color: '#438cef',
+        });
+        geometry.setFromPoints(pointsArray);
+        const line = new THREE.Line(geometry, material);
+        this.lineGroup.add(line);
+      });
     });
-    geometry.setFromPoints(pointsArray);
-    const material = new THREE.MeshBasicMaterial({
-      color: '#438cef',
-    });
-    const line = new THREE.Line(geometry, material);
-    this.lineGroup.add(line);
   }
   createLabel(feature: FeatureDataType) {
     if (!feature.centroid) return false;

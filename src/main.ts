@@ -6,12 +6,11 @@ import turfCenter from '@turf/center';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-
 //@ts-ignore
 import ThreeBase from './ThreeBase.js';
 
+console.log('d3', d3);
 const colorArr = {
   canvasColor: 0x000000, //0x051435, // 画布背景色
   phongMapColor: 0x171f34, // 地图版块颜色
@@ -72,7 +71,7 @@ class ThreeMap {
       //console.log('feature',feature.geometry.type)
     });
     setTimeout(() => {
-      this.mergeMapMesh();
+      this.displayGlowing();
     }, 1000);
   }
   initD3(data: any) {
@@ -113,12 +112,40 @@ class ThreeMap {
 
     // 基础网格材质
     let material_base = new THREE.MeshBasicMaterial({
-      color: colorArr.baseMapColor, //拉高边缘色
+      // color: 0xff0000, //拉高边缘色,
+      transparent: false,
+      // 设置材质透明度
+      opacity: 110,
     });
-    let mesh = new THREE.Mesh(geometry, [material_phong]);
-    meshGroup.add(mesh);
+    let mesh = new THREE.Mesh(geometry, [material_base]);
+    // meshGroup.add(mesh);
     mapGeometryArray.push(geometry);
     mapMaterialArray.push(material_base);
+
+    const mergeGeometries = mergeBufferGeometries([geometry], true); // 合并几何体
+    const demo = new THREE.Mesh(mergeGeometries, [material_base]); // 形成一个整体
+    demo.translateZ(-0.5); // 设置位置
+    demo.position.set(0, 0, -0.1); // 设置位置
+    meshGroup.add(demo); // 合并后添加到场景
+    mergeMesh.push(demo);
+
+    // const edges = new THREE.EdgesGeometry(geometry);
+    // const line = new THREE.LineSegments(edges,new THREE.MeshBasicMaterial({
+    //   color: 0xff0000,
+    // }));
+    // line.material.depthTest = false;
+    // line.material.opacity = 0.25;
+    // line.material.transparent = true;
+    // line.position.x = -4;
+    // meshGroup.add(line);
+
+    // console.log('meshGroup', meshGroup);
+
+    // var edges = new THREE.EdgesHelper(mesh, 0x0000ff);
+    // edges.material.linewidth = 2;
+
+    // meshGroup.add(edges);
+
     // console.log('geometry', geometry);
     // this.threeBase.scene.add(mesh)
     // let box = new THREE.Box3().setFromObject(meshGroup);
@@ -141,19 +168,21 @@ class ThreeMap {
     geometry.setFromPoints(pointsArray);
 
     let material = new THREE.MeshBasicMaterial({
-      color: colorArr.baseMapColor,
+      color: 0xf40f40,
     });
 
     let line = new THREE.Line(geometry, material);
+    // line.position.set(0,0,1)
     meshGroup.add(line);
   }
   mergeMapMesh() {
-    const mergeGeometries = mergeBufferGeometries(mapGeometryArray, true); // 合并几何体
-    mergeMesh = new THREE.Mesh(mergeGeometries, mapMaterialArray); // 形成一个整体
-    mergeMesh.translateZ(-0.5); // 设置位置
-    mergeMesh.position.set(0, 0, -0.1); // 设置位置
-    meshGroup.add(mergeMesh); // 合并后添加到场景
-    this.displayGlowing();
+    // const mergeGeometries = mergeBufferGeometries(mapGeometryArray, true); // 合并几何体
+    // mergeMesh = new THREE.Mesh(mergeGeometries, mapMaterialArray); // 形成一个整体
+    // mergeMesh.translateZ(-0.5); // 设置位置
+    // mergeMesh.position.set(0, 0, -0.1); // 设置位置
+    // meshGroup.add(mergeMesh); // 合并后添加到场景
+    // console.log('mergeMesh',mergeMesh)
+    // this.displayGlowing();
   }
   displayGlowing() {
     const { clientWidth, clientHeight } = this.element;
@@ -161,9 +190,9 @@ class ThreeMap {
     // console.log(' mergeMesh', mergeMesh)
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
-    const outlinePass = new OutlinePass(new THREE.Vector2(clientWidth, clientHeight), scene, camera, [mergeMesh]);
+    const outlinePass = new OutlinePass(new THREE.Vector2(clientWidth, clientHeight), scene, camera, mergeMesh);
     outlinePass.renderToScreen = true;
-    outlinePass.selectedObjects = [mergeMesh];
+    outlinePass.selectedObjects = mergeMesh;
     composer.addPass(renderPass);
     composer.addPass(outlinePass);
     const params = {
@@ -175,8 +204,8 @@ class ThreeMap {
     };
     outlinePass.edgeStrength = params.edgeStrength;
     outlinePass.edgeGlow = params.edgeGlow;
-    outlinePass.visibleEdgeColor.set('#4EC0E9');
-    outlinePass.hiddenEdgeColor.set('#4EC0E9');
+    outlinePass.visibleEdgeColor.set('#f40');
+    outlinePass.hiddenEdgeColor.set('#f40');
     composer.render(scene, camera);
     this.threeBase.composers.push(composer);
   }

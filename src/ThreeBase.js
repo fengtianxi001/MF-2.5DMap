@@ -40,10 +40,15 @@ class Three {
     this.scene.add(light);
   }
   initCamera(element) {
-    const fov = 20;
+    // const fov = 20;
     const aspect = element.offsetWidth / element.offsetHeight;
-    const near = 2;
-    const far = 1000;
+    // const near = 2;
+    // const far = 1000;
+    const fov = 20
+    // const aspect = element.value.offsetWidth / element.value.offsetHeight
+    const near = 0.1
+    const far = 2000
+
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     camera.position.set(0, -30, 100);
     return camera;

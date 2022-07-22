@@ -37,7 +37,7 @@ npm run dev
 
 ### 效果图(版本可能落后)
 
-![效果图](https://github.com/fengtianxi001/MF-2.5DMAP/blob/main/screenshot/screenshot_01.gif?raw=true)
+![效果图](https://raw.githubusercontent.com/fengtianxi001/MF-2.5DMAP/master/screenshot/screenshot_01.gif)
 
 
 

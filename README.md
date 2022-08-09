@@ -32,7 +32,7 @@ npm run dev
 
 
 ## 在线预览
-[https://fengtianxi001.github.io/MF-2.5DMAP/](https://fengtianxi001.github.io/MF-2.5DMAP/)
+[https://fengtianxi001.github.io/MF-2.5DMap](https://fengtianxi001.github.io/MF-2.5DMap/)
 
 
 ## 效果图

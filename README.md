@@ -7,7 +7,7 @@
 
 项目的主要功能和思路如下:
 
-- 使用[DATAV.GeoAltas](https://datav.aliyun.com/portal/school/atlas/area_selector)获取行政区的`geojson`
+- 使用[geojson.cn](https://geojson.cn/)获取行政区的`geojson`
 
 - 原本计划将`geojson`中的`WGS84坐标系`转换成`墨卡托投影坐标系`再进行渲染, 实践中发现意义不大,且每次涉及坐标系转换都会有精度损失,最终决定直接使用`WGS84`坐标系进行渲染。
 
@@ -21,7 +21,7 @@
 
 ## 项目说明
 
-- 项目使用[DATAV.GeoAltas](https://datav.aliyun.com/portal/school/atlas/area_selector)开源接口，对查询的次数有限制，请勿恶意攻击和压力查询
+- 项目使用[geojson.cn](https://geojson.cn/)接口，对查询的次数有限制，请勿恶意攻击和压力查询
 
 ## 项目截图
 

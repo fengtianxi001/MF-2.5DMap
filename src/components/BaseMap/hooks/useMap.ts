@@ -67,7 +67,7 @@ export function useMap() {
   // 生成地图材质
   const generateMapMaterial = () => {
     const texture = new THREE.TextureLoader()
-    const textureMap = texture.load('/texture/texture_map.jpg')
+    const textureMap = texture.load('./texture/texture_map.jpg')
     textureMap.wrapS = THREE.RepeatWrapping
     textureMap.wrapT = THREE.RepeatWrapping
     textureMap.flipY = false
@@ -213,7 +213,7 @@ export function useMap() {
     const createOuterCircle = () => {
       const geometry = new THREE.PlaneGeometry(size, size)
       const material = new THREE.MeshBasicMaterial({
-        map: textureLoader.load('/texture/texture_circle_out.png'),
+        map: textureLoader.load('./texture/texture_circle_out.png'),
         transparent: true,
         opacity: 1,
         depthTest: true,
@@ -231,7 +231,7 @@ export function useMap() {
     const createInnerCircle = () => {
       const geometry = new THREE.PlaneGeometry(size, size)
       const material = new THREE.MeshBasicMaterial({
-        map: textureLoader.load('/texture/texture_circle_inner.png'),
+        map: textureLoader.load('./texture/texture_circle_inner.png'),
         transparent: true,
         opacity: 1,
         depthTest: true,
@@ -249,7 +249,7 @@ export function useMap() {
     const createBackgroundPlane = () => {
       const geometry = new THREE.PlaneGeometry(size * 4, size * 4)
       const material = new THREE.MeshBasicMaterial({
-        map: textureLoader.load('/texture/texture_plane.png'),
+        map: textureLoader.load('./texture/texture_plane.png'),
         transparent: true,
         opacity: 1,
         depthTest: true,
@@ -262,7 +262,7 @@ export function useMap() {
     const createBackgroundDotPlane = () => {
       const geometry = new THREE.PlaneGeometry(size, size)
       const material = new THREE.MeshBasicMaterial({
-        map: textureLoader.load('/texture/texture_plane_dot.png'),
+        map: textureLoader.load('./texture/texture_plane_dot.png'),
         transparent: true,
         opacity: 1,
         depthTest: true,

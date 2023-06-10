@@ -87018,7 +87018,7 @@ function print() { __p += __j.call(arguments, '') }
         V(), L()
       },
       b = () => {
-        const k = new HP().load('/texture/texture_map.jpg')
+        const k = new HP().load('./texture/texture_map.jpg')
         ;(k.wrapS = Rd),
           (k.wrapT = Rd),
           (k.flipY = !1),
@@ -87123,7 +87123,7 @@ function print() { __p += __j.call(arguments, '') }
           Y = () => {
             const oe = new cl(V, V),
               te = new Eu({
-                map: L.load('/texture/texture_circle_out.png'),
+                map: L.load('./texture/texture_circle_out.png'),
                 transparent: !0,
                 opacity: 1,
                 depthTest: !0,
@@ -87140,7 +87140,7 @@ function print() { __p += __j.call(arguments, '') }
           U = () => {
             const oe = new cl(V, V),
               te = new Eu({
-                map: L.load('/texture/texture_circle_inner.png'),
+                map: L.load('./texture/texture_circle_inner.png'),
                 transparent: !0,
                 opacity: 1,
                 depthTest: !0,
@@ -87157,7 +87157,7 @@ function print() { __p += __j.call(arguments, '') }
           le = () => {
             const oe = new cl(V * 4, V * 4),
               te = new Eu({
-                map: L.load('/texture/texture_plane.png'),
+                map: L.load('./texture/texture_plane.png'),
                 transparent: !0,
                 opacity: 1,
                 depthTest: !0,
@@ -87168,7 +87168,7 @@ function print() { __p += __j.call(arguments, '') }
           q = () => {
             const oe = new cl(V, V),
               te = new Eu({
-                map: L.load('/texture/texture_plane_dot.png'),
+                map: L.load('./texture/texture_plane_dot.png'),
                 transparent: !0,
                 opacity: 1,
                 depthTest: !0,

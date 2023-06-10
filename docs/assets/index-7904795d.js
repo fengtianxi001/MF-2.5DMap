@@ -87246,9 +87246,7 @@ function print() { __p += __j.call(arguments, '') }
         return (
           Wt(() => {
             pr(() => {
-              r({
-                geojson: `https://geo.datav.aliyun.com/areas_v3/bound/${t.adcode}_full.json`,
-              })
+              r({ geojson: `https://geojson.cn/api/data/${t.adcode}.json` })
             })
           }),
           (i, o) => (
@@ -87263,7 +87261,7 @@ function print() { __p += __j.call(arguments, '') }
         )
       },
     }),
-    Pve = Sm(Eve, [['__scopeId', 'data-v-a1db899a']]),
+    Pve = Sm(Eve, [['__scopeId', 'data-v-82274468']]),
     Tve = [
       { value: 11e4, label: '北京市' },
       { value: 12e4, label: '天津市' },

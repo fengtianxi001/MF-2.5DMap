@@ -13,7 +13,7 @@ const { container, bootstrap } = useMap()
 onMounted(() => {
   watchEffect(() => {
     bootstrap({
-      geojson: `https://geo.datav.aliyun.com/areas_v3/bound/${props.adcode}_full.json`,
+      geojson: `https://geojson.cn/api/data/${props.adcode}.json`,
     })
   })
 })

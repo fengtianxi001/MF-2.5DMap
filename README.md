@@ -25,4 +25,4 @@
 
 ## 项目截图
 
-![](https://raw.githubusercontent.com/fengtianxi001/MF-2.5DMap/master/screenshot/screenshot_01.gif)
+![](https://raw.githubusercontent.com/fengtianxi001/MF-2.5DMap/feature/screenshot/screenshot_01.png)
